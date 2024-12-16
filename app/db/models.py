@@ -12,3 +12,4 @@ class File(Base):
 
     id = Column(String, primary_key=True, default=ulid)
     data = Column(LargeBinary, nullable=False)
+    mime_type = Column(String, nullable=False)

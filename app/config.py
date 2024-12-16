@@ -18,8 +18,6 @@ MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB
 
 EXTERNAL_SERVICES: list[Service] = [Service.AUTHENTICATION]
 
-PATH_TO_GSCHEMA = '/api/graphql/schema.graphql'
-
 
 file_handler = logging.FileHandler(os.path.join(root_path, f'{SERVICE_NAME}.log'))
 file_handler.setLevel(logging.DEBUG)
@@ -35,5 +33,6 @@ SelfService = SelfAsyncService(
     self_service=Service(SERVICE_NAME),
     login=os.getenv("LOGIN"),  # type: ignore[reportArgumentType]
     password=os.getenv("PASSWORD"),  # type: ignore[reportArgumentType]
-    external_services=EXTERNAL_SERVICES
+    external_services=EXTERNAL_SERVICES,
+    logger_object=logger
 )

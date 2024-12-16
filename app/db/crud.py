@@ -6,13 +6,14 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
-async def create_file(session: AsyncSession, file_data: bytes) -> (
+async def create_file(session: AsyncSession, file_data: bytes, mime_type: str) -> (
                           tuple[Literal[True], File]
                           | tuple[Literal[False], ErrorSchema]
                       ):
     try:
         file = File(
-            data=file_data
+            data=file_data,
+            mime_type=mime_type
         )
         session.add(file)
         await session.commit()

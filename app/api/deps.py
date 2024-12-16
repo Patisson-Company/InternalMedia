@@ -6,7 +6,7 @@ from db.base import get_session
 from fastapi import Depends, File, HTTPException, UploadFile, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from opentelemetry import trace
-from patisson_request.depends import (dep_jaeger_service_decorator,
+from patisson_request.depends import (dep_opentelemetry_service_decorator,
                                       verify_service_token_dep)
 from patisson_request.errors import ErrorCode, ErrorSchema, InvalidJWT
 from patisson_request.jwt_tokens import ServiceAccessTokenPayload
@@ -15,7 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 security = HTTPBearer()
 tracer = trace.get_tracer(__name__)
 
-@dep_jaeger_service_decorator(tracer)
+@dep_opentelemetry_service_decorator(tracer)
 async def verify_service_token(
     credentials: HTTPAuthorizationCredentials = Depends(security)
     ) -> ServiceAccessTokenPayload:
@@ -55,7 +55,19 @@ async def read_file(file: UploadFile = File(...)) -> bytes:
                 error=ErrorCode.INVALID_PARAMETERS,
                 extra=f"File size exceeds the {config.MAX_FILE_SIZE}MB limit"
             ).model_dump()])
-    return file
+    return data
+
+async def mime_type_file(file: UploadFile = File(...)) -> str:
+    mime_type = file.content_type
+    if not mime_type:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=[ErrorSchema(
+                error=ErrorCode.INVALID_PARAMETERS,
+                extra="MIME type of the file could not be determined"
+            ).model_dump()]
+        )
+    return mime_type
 
 
 SessionDep = Annotated[AsyncSession, Depends(get_session)]
@@ -64,3 +76,4 @@ ServiceJWT = Annotated[ServiceAccessTokenPayload, Depends(verify_service_token)]
 MediaAccess_ServiceJWT = Annotated[ServiceAccessTokenPayload, Depends(verify_serice__media_access__token)]
 
 FileData = Annotated[bytes, Depends(read_file)]
+MimeFile =Annotated[str, Depends(mime_type_file)]
